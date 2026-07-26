@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Credit Card Fraud Detection</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>💳 Credit Card Fraud Detection Dashboard</h1>
+
+    <p class="subtitle">
+        Upload a CSV file to detect fraudulent transactions using Logistic Regression
+    </p>
+
+    {% if error %}
+
+    <div class="error-box">
+
+        {{ error }}
+
+    </div>
+
+    {% endif %}
+
+    <div class="upload-box">
+
+        <form action="/predict" method="POST" enctype="multipart/form-data">
+
+            <input
+                type="file"
+                name="file"
+                accept=".csv"
+                required>
+
+            <button type="submit">
+
+                Analyze File
+
+            </button>
+
+        </form>
+
+    </div>
+
+    {% if total %}
+
+    <div class="cards">
+
+        <div class="card blue">
+
+            <h2>{{ total }}</h2>
+
+            <p>Total Transactions</p>
+
+        </div>
+
+        <div class="card green">
+
+            <h2>{{ normal }}</h2>
+
+            <p>Normal Transactions</p>
+
+        </div>
+
+        <div class="card red">
+
+            <h2>{{ fraud }}</h2>
+
+            <p>Fraud Transactions</p>
+
+        </div>
+
+    </div>
+
+    <div class="chart-box">
+
+        <h2>Fraud Detection Overview</h2>
+
+        <canvas id="fraudChart"></canvas>
+
+    </div>
+
+    {% endif %}
+
+    {% if table %}
+
+    <div class="table-container">
+
+        <h2>Prediction Result (First 100 Rows)</h2>
+
+        {{ table|safe }}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+{% if total %}
+
+<script>
+const normal = Number("{{ normal|default(0) }}");
+const fraud = Number("{{ fraud|default(0) }}");
+const total = normal + fraud;
+
+const ctx = document.getElementById("fraudChart");
+
+if (ctx) {
+
+    Chart.register(ChartDataLabels);
+    new Chart(ctx, {
+
+        type: "bar",
+
+        data: {
+
+            labels: ["Normal", "Fraud"],
+
+            datasets: [{
+
+                label: "Transactions",
+
+                data: [normal, fraud],
+
+                backgroundColor: [
+                    "#22c55e",
+                    "#ef4444"
+                ],
+
+                borderColor: [
+                    "#15803d",
+                    "#b91c1c"
+                ],
+
+                borderWidth: 2,
+
+                borderRadius: 10
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            animation: {
+                duration: 1800,
+                easing: "easeOutBounce"
+            },
+
+            scales: {
+
+                y: {
+                    beginAtZero: true
+                }
+
+            },
+
+            plugins: {
+
+                legend: {
+                    display: false
+                },
+
+                title: {
+
+                    display: true,
+
+                    text: "Transaction Statistics",
+
+                    font: {
+                        size: 22,
+                        weight: "bold"
+                    }
+
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        label: function(context){
+
+                            let value = context.raw;
+
+                            let percent = ((value / total) * 100).toFixed(2);
+
+                            return value.toLocaleString() + " Transactions (" + percent + "%)";
+                        }
+
+                    }
+
+                },
+
+                datalabels: {
+
+    color: "#1e293b",
+
+    anchor: "end",
+
+    align: "end",
+
+    offset: 12,
+
+    clip: false,
+
+    font: {
+
+        weight: "bold",
+
+        size: 14
+
+    },
+
+    formatter: function(value){
+
+        let percent=((value/total)*100).toFixed(2);
+
+        return value.toLocaleString()+"\n("+percent+"%)";
+
+    }
+
+}
+
+            }
+
+        }
+
+    });
+
+}
+</script>
+
+{% endif %}
+
+</body>
+
+</html>
