@@ -195,7 +195,7 @@ def predict():
     )
 
 
-    prediction = (probability[:,1] >= 0.9999).astype(int)
+    prediction = (probability[:,1] >= 0.4).astype(int)
 
 
 
